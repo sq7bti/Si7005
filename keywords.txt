@@ -1,0 +1,26 @@
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+getTemperature	KEYWORD2
+getHumidity	KEYWORD2
+getTempAge	KEYWORD2
+getHumAge	KEYWORD2
+getTempValid	KEYWORD2
+getHumValid	KEYWORD2
+
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+Si7005	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
