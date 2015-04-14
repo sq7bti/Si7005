@@ -66,81 +66,57 @@ void Si7005::process() {
     break;
     case 1:
       dev->beginTransmission(0x40);
-      ++state;
-    break;
-    case 2:
       dev->write(0x03); // set pointer to register number 3, CONFIG
-      ++state;
-    break;
-    case 3:
       dev->write(((th)?0x11:0x01) | ((fast)?0x20:0x00)); // write data to register, set start and temp
-      ++state;
-    break;
-    case 4:
       dev->endTransmission();
       time_out = millis() + ((fast)?18:35);
       ++state;
     break;
-    case 5:
+    case 2:
       // wait for end of conversion 35ms
       if(millis() > time_out)
         ++state;
     break;
-    case 6:
+    case 3:
       dev->beginTransmission(0x40);
-      ++state;
-    break;
-    case 7:
       dev->write(0x00); // set pointer to register number 0, STATUS
-      ++state;
-    break;
-    case 8:
       dev->requestFrom(0x40, 3);
       time_out = millis() + ((fast)?18:35);
-      ++state;
-    break;
-    case 9:
-      if(dev->available()){
-        data = dev->read();
-        data &= 0x01;
-        if(th) {
-          temp_valid = (data == 0x00);
-        } else {
-          humid_valid = (data == 0x00);
-        }
-        time_out = millis() + ((fast)?18:35);
-        ++state;
-      }
-      if(millis() > time_out) {
+      while(!dev->available() && (millis() < time_out));
+      if(!dev->available()) {
         dev->endTransmission();
         state = 0;
+        return;
       }
-    break;
-    case 10:
-      if(dev->available()){
-        data = dev->read();
-        data <<= 8;
-        time_out = millis() + ((fast)?18:35);
-        ++state;
+      // read status
+      data = dev->read();
+      data &= 0x01;
+      if(th) {
+        temp_valid = (data == 0x00);
+      } else {
+        humid_valid = (data == 0x00);
       }
-      if(millis() > time_out) {
+      time_out = millis() + ((fast)?18:35);
+      while(!dev->available() && (millis() < time_out));
+      if(!dev->available()) {
         dev->endTransmission();
         state = 0;
+        return;
       }
-    break;
-    case 11:
-      if(dev->available()){
-        data += dev->read();
-        dev->endTransmission();
-        time_out = millis() + ((fast)?18:35);
-        ++state;
-      }
-      if(millis() > time_out) {
+      // read H byte
+      data = dev->read();
+      data <<= 8;
+      time_out = millis() + ((fast)?18:35);
+      while(!dev->available() && (millis() < time_out));
+      if(!dev->available()) {
         dev->endTransmission();
         state = 0;
+        return;
       }
-    break;
-    case 12:
+      // read L byte
+      data += dev->read();
+      dev->endTransmission();
+      time_out = millis() + ((fast)?18:35);
       if(th) {
         if(temp_valid) {
           data >>= 2;
@@ -162,8 +138,8 @@ void Si7005::process() {
       time_out = millis() + fast?18:35;
       ++state;
     break;
-    case 13:
-      // wait for end of conversion 35ms
+    case 4:
+      // wait for another conversion time to avoid too quick repetition
       if(millis() > time_out)
         state = 0;
     break;
